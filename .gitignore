@@ -1,0 +1,111 @@
+# Visual Studio User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (VSCode, Rider, etc.)
+.vscode/
+.idea/
+*.code-workspace
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+*.tlog
+
+# Build logs
+*.log
+*.trace
+
+# Visual Studio Generated Files
+*.vs/
+*.ncb
+*.aps
+*.opensdf
+*.sdf
+*.cache
+*.ilk
+*.idb
+*.pdb
+*.ipdb
+*.iobj
+
+# Visual Studio Code Coverage
+*.coverage
+*.coveragexml
+TestResults/
+
+# Database files
+*.mdf
+*.ldf
+*.ndf
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+# The packages folder can be ignored if package restore is enabled
+**/packages/
+# Uncomment if using .NET Core or .NET 5+
+!**/packages/build/
+!**/packages/rebuild/
+!**/packages/props/
+!**/packages/targets/
+
+# Mono auto generated files
+mono_crash.*
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows shortcuts
+*.lnk
+
+# Yarn and NPM folders
+node_modules/
+yarn-error.log
+.yarn-integrity
+.pnp.*
+
+# ASP.NET Scaffolding
+.scaffolding
+
+# Entity Framework
+*.edmx.diagram
+*.edmx.sql
+*_i.c
+
+# SQL Server files
+*.mdf
+*.ldf
+
+# Azure DevOps
+.env
+
+# macOS files
+.DS_Store
+
+# Python virtual environment
+*.pyc
+*.pyo
+__pycache__/
+env/
+venv/
+
+# Add your own custom rules below
