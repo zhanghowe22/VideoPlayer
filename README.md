@@ -38,4 +38,8 @@ app -> controller -> vlc
     关闭
 
 ## [详细设计]
-![alt text](image.png)
+1. 时序图
+    ![alt text](image-5.png)
+
+2. 类图
+   ![alt text](image-4.png)

@@ -61,7 +61,6 @@ int main()
 		}
 		getchar();
 
-
 		libvlc_media_player_pause(player);
 		getchar();
 		libvlc_media_player_play(player);
