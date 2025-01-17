@@ -109,3 +109,4 @@ env/
 venv/
 
 # Add your own custom rules below
+VideoPlay\Debug\
