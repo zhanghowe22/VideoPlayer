@@ -10,18 +10,18 @@ app -> controller -> dlg
                        |
 app -> controller -> vlc
 
-1. videoClientApp模块
+1. CVideoClientApp模块
     **接口：**
     InitInstance
 
-2. UI模块 VideoClientDlg
+2. UI模块 CVideoClientDlg
 **接口：**
     Play、Pause、Stop响应接口
     定时器OnTimer（刷新进度条）
     滑动条拖动响应接口
     地址输入的变量
 
-3. libVLC模块 EdoyunVLC
+1. libVLC模块 CEVlc
    
 **接口：**
     初始化
@@ -30,9 +30,12 @@ app -> controller -> vlc
     播放/暂停/停止/音量/位置
     销毁
 
-4. 控制层模块 VideoClientController
+4. 控制层模块 CVideoClientController
     协调UI和VLC
     **接口：**
     初始化（播放窗口设置）
     响应播放、暂停、地址、停止、音量、进度
     关闭
+
+## [详细设计]
+![alt text](image.png)
