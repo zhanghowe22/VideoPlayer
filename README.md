@@ -43,3 +43,4 @@ app -> controller -> vlc
 
 2. 类图
    ![alt text](image-4.png)
+

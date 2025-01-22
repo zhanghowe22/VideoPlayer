@@ -185,9 +185,10 @@ void CVideoClientDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	TRACE("pos %p volume %p cur %p pos %d\r\n", &m_pos, &m_volume, pScrollBar, nPos);
 	if (nSBCode == 5) {
-		CString strTime;
-		strTime.Format(_T("%d%%"), nPos);
-		SetDlgItemText(IDC_STATIC_TIME, strTime);
+		CString strPosition;
+		strPosition.Format(_T("%d%%"), nPos);
+		SetDlgItemText(IDC_STATIC_TIME, strPosition);
+		m_pos;
 	}
 	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
 }
