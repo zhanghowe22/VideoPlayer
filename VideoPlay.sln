@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoPlay", "VideoPlay\Vide
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoClient", "VideoClient\VideoClient.vcxproj", "{34FC04F5-1BFD-4FB4-A35A-9E55827B4566}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoRTSPServer", "VideoRTSPServer\VideoRTSPServer.vcxproj", "{E98E6441-3B5F-4CA6-83F0-A3FDBA70E391}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{34FC04F5-1BFD-4FB4-A35A-9E55827B4566}.Release|x64.Build.0 = Release|x64
 		{34FC04F5-1BFD-4FB4-A35A-9E55827B4566}.Release|x86.ActiveCfg = Release|Win32
 		{34FC04F5-1BFD-4FB4-A35A-9E55827B4566}.Release|x86.Build.0 = Release|Win32
+		{E98E6441-3B5F-4CA6-83F0-A3FDBA70E391}.Debug|x64.ActiveCfg = Debug|x64
+		{E98E6441-3B5F-4CA6-83F0-A3FDBA70E391}.Debug|x64.Build.0 = Debug|x64
+		{E98E6441-3B5F-4CA6-83F0-A3FDBA70E391}.Debug|x86.ActiveCfg = Debug|Win32
+		{E98E6441-3B5F-4CA6-83F0-A3FDBA70E391}.Debug|x86.Build.0 = Debug|Win32
+		{E98E6441-3B5F-4CA6-83F0-A3FDBA70E391}.Release|x64.ActiveCfg = Release|x64
+		{E98E6441-3B5F-4CA6-83F0-A3FDBA70E391}.Release|x64.Build.0 = Release|x64
+		{E98E6441-3B5F-4CA6-83F0-A3FDBA70E391}.Release|x86.ActiveCfg = Release|Win32
+		{E98E6441-3B5F-4CA6-83F0-A3FDBA70E391}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
