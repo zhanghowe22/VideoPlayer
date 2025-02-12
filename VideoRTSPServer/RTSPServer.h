@@ -37,7 +37,10 @@ public:
 class RTSPServer : public ThreadFuncBase
 {
 public:
-	RTSPServer() : m_socket(true), m_status(0) {}
+	RTSPServer() : m_socket(true), m_status(0) 
+	{
+		m_threadMain.UpdateWorker(ThreadWorker(this, (FUNCTYPE)&RTSPServer::threadWorker));
+	}
 
 	int Init(const std::string& strIP = "0.0.0.0", short port = 554);
 
@@ -48,13 +51,15 @@ public:
 	~RTSPServer() {}
 
 protected:
-	int ThreadWorker();
+	int threadWorker();
 	RTSPRequest AnalyseRequest(const std::string& data);
 	RTSReply MakeReplay(const RTSPRequest& request);
 	int ThreadSession();
 
 private:
 	ESocket m_socket;
+
+	EAddress m_addr;
 
 	int m_status; // 0: 未初始化 1: 初始化完成 2: 正在运行 3：关闭
 

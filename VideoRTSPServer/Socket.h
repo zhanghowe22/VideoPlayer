@@ -46,6 +46,55 @@ private:
 	SOCKET m_sock;
 };
 
+class EAddress
+{
+public:
+	EAddress() {
+		m_port = -1;
+		memset(&m_addr, 0, sizeof(m_addr));
+		m_addr.sin_family = AF_INET;
+	}
+
+	EAddress(const EAddress& addr) {
+		m_ip = addr.m_ip;
+		m_port = addr.m_port;
+		memcpy(&m_addr, &addr.m_addr, sizeof(sockaddr_in));
+	}
+
+	EAddress& operator=(const EAddress& addr) {
+		if (this != &addr) {
+			m_ip = addr.m_ip;
+			m_port = addr.m_port;
+			memcpy(&m_addr, &addr.m_addr, sizeof(sockaddr_in));
+		}
+		return *this;
+	}
+
+	~EAddress() {}
+
+	void Update(const std::string& ip, short port) {
+		m_ip = ip;
+		m_port = port;
+		m_addr.sin_port = htons(port);
+		m_addr.sin_addr.s_addr = inet_addr(ip.c_str());
+	}
+
+	operator const sockaddr* () const {
+		return (sockaddr*)&m_addr;
+	}
+
+	operator sockaddr_in* () {
+		return &m_addr;
+	}
+
+	int size() const { return sizeof(sockaddr_in); }
+
+private:
+	std::string m_ip;
+	short m_port;
+	sockaddr_in m_addr;
+};
+
 class ESocket {
 public:
 	ESocket(bool isTcp = true) 
@@ -68,6 +117,19 @@ public:
 
 	operator SOCKET() {
 		return *m_socket;
+	}
+
+	int Bind(const EAddress& addr) 
+	{
+		return bind(*m_socket, addr, addr.size());
+	}
+
+	int Listen(int backlog = 5) {
+		return listen(*m_socket, backlog);
+	}
+
+	int Connect(const EAddress& addr) {
+		return connect(*m_socket, addr, addr.size());
 	}
 
 private:
