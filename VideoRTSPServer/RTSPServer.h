@@ -3,6 +3,7 @@
 #include "Socket.h"
 #include <string>
 #include <map>
+#include "MyQueue.h"
 
 class RTSPRequest {
 public:
@@ -15,12 +16,13 @@ private:
 	int m_method; // 0: OPTIONS 1: DESCRIBE 2:SETUP 3:PLAY 4:TEARDOWN
 };
 
-class RTSReply {
+class RTSPReply {
 public:
-	RTSReply();
-	RTSReply(const RTSReply& protocol);
-	RTSReply& operator=(const RTSReply& protocol);
-	~RTSReply();
+	RTSPReply();
+	RTSPReply(const RTSPReply& protocol);
+	RTSPReply& operator=(const RTSPReply& protocol);
+	~RTSPReply();
+	EBuffer toBuffer();
 
 private:
 	int m_method; // 0: OPTIONS 1: DESCRIBE 2:SETUP 3:PLAY 4:TEARDOWN
@@ -37,7 +39,7 @@ public:
 class RTSPServer : public ThreadFuncBase
 {
 public:
-	RTSPServer() : m_socket(true), m_status(0) 
+	RTSPServer() : m_socket(true), m_status(0) ,m_pool(10)
 	{
 		m_threadMain.UpdateWorker(ThreadWorker(this, (FUNCTYPE)&RTSPServer::threadWorker));
 	}
@@ -46,14 +48,15 @@ public:
 
 	int Invoke();
 
-	int Stop();
+	void Stop();
 
-	~RTSPServer() {}
+	~RTSPServer();
 
 protected:
+	// 返回0继续，返回负数终止，返回其他警告
 	int threadWorker();
 	RTSPRequest AnalyseRequest(const std::string& data);
-	RTSReply MakeReplay(const RTSPRequest& request);
+	RTSPReply MakeReplay(const RTSPRequest& request);
 	int ThreadSession();
 
 private:
@@ -69,6 +72,8 @@ private:
 
 	std::map<std::string, RTSPSession>m_mapSession;
 
-	static SocketIniter m_initer;;
+	static SocketIniter m_initer;
+
+	CMyQueue<ESocket> m_clients;
 };
 

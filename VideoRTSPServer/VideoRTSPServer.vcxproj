@@ -143,6 +143,7 @@
     <ClCompile Include="VideoRTSPServer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MyQueue.h" />
     <ClInclude Include="MyThread.h" />
     <ClInclude Include="RTSPServer.h" />
     <ClInclude Include="Socket.h" />
