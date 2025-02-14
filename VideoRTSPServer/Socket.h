@@ -39,6 +39,10 @@ public:
 		memcpy((void*)c_str(), buffer, size);
 	}
 
+	void Zero() {
+		if (size() > 0) memset((void*)c_str(), 0, size());
+	}
+
 };
 
 
