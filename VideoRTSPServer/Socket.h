@@ -43,6 +43,34 @@ public:
 		if (size() > 0) memset((void*)c_str(), 0, size());
 	}
 
+	EBuffer& operator<<(const EBuffer& str) {
+		if (this != str) {
+			*this += str;
+		}
+		else {
+			EBuffer temp = str;
+			*this += temp;
+		}
+		return *this;
+	}
+
+	EBuffer& operator<<(const std::string& str) {
+		*this += str;
+		return *this;
+	}
+
+	EBuffer& operator<<(const char* str) {
+		*this += str;
+		return *this;
+	}
+
+	EBuffer& operator<<(int data) {
+		char s[16] = "";
+		snprintf(s, sizeof(s), "%d", data);
+		*this += s;
+		return *this;
+	}
+
 };
 
 
@@ -201,7 +229,15 @@ public:
 
 	int Send(const EBuffer& buffer)
 	{
-		return send(*m_socket, buffer, buffer.size(), 0);
+		int index = 0;
+		char* pData = buffer;
+		while (index < buffer.size()) {
+			int ret = send(*m_socket, pData + index, buffer.size() - index, 0);
+			if (ret < 0) return ret;
+			if(ret == 0) break;
+			index += ret;
+		}
+		return index;
 	}
 
 	void Close() {

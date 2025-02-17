@@ -10,14 +10,24 @@ public:
 	RTSPRequest();
 	RTSPRequest(const RTSPRequest& protocol);
 	RTSPRequest& operator=(const RTSPRequest& protocol);
-	~RTSPRequest();
+	~RTSPRequest() { m_method = -1; }
+	void SetMethod(const EBuffer& method);
+	void SetUrl(const EBuffer& url);
+	void SetSequence(const EBuffer& seq);
+	void SetClientPort(int ports[]);
+	void SetSession(const EBuffer& session);
+	int method() const { return m_method; }
+	const EBuffer& url() const { return m_url; }
+	const EBuffer& session() const { return m_session; }
+	const EBuffer& sequence() const { return m_seq; }
+	const EBuffer& port(int index = 0) const { return index ? m_client_port[1] : m_client_port[0]; }
 
 private:
-	int m_method; // 0: OPTIONS 1: DESCRIBE 2:SETUP 3:PLAY 4:TEARDOWN
-	std::string m_url;
-	std::string m_session;
-	int m_seq;
-	short m_client_port[2];
+	int m_method; // -1: 初始化 0: OPTIONS 1: DESCRIBE 2:SETUP 3:PLAY 4:TEARDOWN
+	EBuffer m_url;
+	EBuffer m_session;
+	EBuffer m_seq;
+	EBuffer m_client_port[2];
 };
 
 class RTSPReply {
@@ -27,18 +37,26 @@ public:
 	RTSPReply& operator=(const RTSPReply& protocol);
 	~RTSPReply();
 	EBuffer toBuffer();
+	void SetOptions(const EBuffer& options);
+	void SetSequence(const EBuffer& seq);
+	void SetSdp(const EBuffer& sdp);
+	void SetClientPort(const EBuffer& port0, const EBuffer& port1);
+	void SetServerPort(const EBuffer& port0, const EBuffer& port1);
+	void SetSession(const EBuffer& session);
 
 private:
 	int m_method; // 0: OPTIONS 1: DESCRIBE 2:SETUP 3:PLAY 4:TEARDOWN
 	short m_client_port[2];
 	short m_server_port[2];
-	std::string m_sdp;
+	EBuffer m_sdp;
+	EBuffer m_options;
+	EBuffer m_session;
 };
 
 // 会话
 class RTSPSession {
 public:
-	RTSPSession() {}
+	RTSPSession();
 	RTSPSession(const ESocket& client);
 	RTSPSession(const RTSPSession& session);
 	RTSPSession& operator=(const RTSPSession& session);
@@ -46,6 +64,7 @@ public:
 	int PickRequestAndReply();
 
 private:
+	EBuffer PickOneLine(EBuffer& buffer);
 	EBuffer Pick();
 	RTSPRequest AnalyseRequest(const EBuffer& buffer);
 	RTSPReply Reply(const RTSPRequest& request);
