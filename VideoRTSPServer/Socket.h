@@ -1,10 +1,11 @@
 #pragma once
 
 #include <WinSock2.h>
-#include <iostream>
-#include <share.h>
+#include <string>
+#include <memory>
 
 #pragma warning(disable:6031)
+#pragma comment(lib, "ws2_32.lib") // ÍøÂçAPIº¯Êý
 
 class EBuffer : public std::string {
 public:
@@ -68,6 +69,16 @@ public:
 		char s[16] = "";
 		snprintf(s, sizeof(s), "%d", data);
 		*this += s;
+		return *this;
+	}
+
+	const EBuffer& operator>>(int& data) const {
+		data = atoi(c_str());
+		return *this;
+	}
+
+	const EBuffer& operator>>(short& data) const {
+		data = (short)atoi(c_str());
 		return *this;
 	}
 
@@ -231,7 +242,7 @@ public:
 	{
 		int index = 0;
 		char* pData = buffer;
-		while (index < buffer.size()) {
+		while (index < (int)buffer.size()) {
 			int ret = send(*m_socket, pData + index, buffer.size() - index, 0);
 			if (ret < 0) return ret;
 			if(ret == 0) break;

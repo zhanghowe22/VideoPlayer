@@ -1,6 +1,6 @@
 #pragma once
-#include "MyThread.h"
 #include "Socket.h"
+#include "MyThread.h"
 #include <string>
 #include <map>
 #include "MyQueue.h"
@@ -35,7 +35,7 @@ public:
 	RTSPReply();
 	RTSPReply(const RTSPReply& protocol);
 	RTSPReply& operator=(const RTSPReply& protocol);
-	~RTSPReply();
+	~RTSPReply(){}
 	EBuffer toBuffer();
 	void SetOptions(const EBuffer& options);
 	void SetSequence(const EBuffer& seq);
@@ -51,6 +51,7 @@ private:
 	EBuffer m_sdp;
 	EBuffer m_options;
 	EBuffer m_session;
+	EBuffer m_seq;
 };
 
 // »á»°
