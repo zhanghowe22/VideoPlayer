@@ -2,6 +2,8 @@
 #include <rpc.h>
 #pragma comment(lib, "rpcrt4.lib")
 
+SocketIniter RTSPServer::m_initer;
+
 int RTSPServer::Init(const std::string& strIP, short port)
 {
 	m_addr.Update(strIP, port);
@@ -13,6 +15,7 @@ int RTSPServer::Init(const std::string& strIP, short port)
 int RTSPServer::Invoke()
 {
 	m_threadMain.Start();
+	m_pool.Invoke();
 	return 0;
 }
 
@@ -42,7 +45,6 @@ int RTSPServer::threadWorker()
 
 int RTSPServer::ThreadSession()
 {
-	// TODO: 接收数据请求，解析请求，应答请求
 	RTSPSession session;
 	if (m_lstSession.PopFront(session)) {
 		return session.PickRequestAndReply();
@@ -56,7 +58,7 @@ RTSPSession::RTSPSession()
 	UUID uuid;
 	UuidCreate(&uuid);
 	m_id.resize(8);
-	snprintf((char*)m_id.c_str(), m_id.size(), "%08d", uuid.Data1);
+	snprintf((char*)m_id.c_str(), m_id.size(), "%u%u", uuid.Data1, uuid.Data2);
 }
 
 RTSPSession::RTSPSession(const ESocket& client)
@@ -66,7 +68,7 @@ RTSPSession::RTSPSession(const ESocket& client)
 	UUID uuid;
 	UuidCreate(&uuid);
 	m_id.resize(8);
-	snprintf((char*)m_id.c_str(), m_id.size(), "%08d", uuid.Data1);
+	snprintf((char*)m_id.c_str(), m_id.size(), "%u%u", uuid.Data1, uuid.Data2);
 }
 
 RTSPSession::RTSPSession(const RTSPSession& session)
@@ -87,15 +89,18 @@ RTSPSession& RTSPSession::operator=(const RTSPSession& session)
 
 int RTSPSession::PickRequestAndReply()
 {
-	EBuffer buffer = Pick();
-	if (buffer.size() <= 0) return -1;
-	RTSPRequest req = AnalyseRequest(buffer);
-	if (req.method() < 0) {
-		TRACE("buffer[%s]\r\n", (char*)buffer);
-		return -2;
-	}
-	RTSPReply rep = Reply(req);
-	int ret = m_client.Send(rep.toBuffer());
+	int ret = -1;
+	do {
+		EBuffer buffer = Pick();
+		if (buffer.size() <= 0) return -1;
+		RTSPRequest req = AnalyseRequest(buffer);
+		if (req.method() < 0) {
+			TRACE("buffer[%s]\r\n", (char*)buffer);
+			return -2;
+		}
+		RTSPReply rep = Reply(req);
+		ret = m_client.Send(rep.toBuffer());
+	} while (ret >= 0);
 	if (ret < 0) return ret;
 	return 0;
 }
@@ -109,7 +114,7 @@ EBuffer RTSPSession::PickOneLine(EBuffer& buffer)
 		result += buffer.at(i);
 		if (buffer.at(i) == '\n') break;
 	}
-	temp = (char*)buffer + i;
+	temp = (char*)buffer + i + 1;
 	buffer = temp;
 	return result;
 }
@@ -139,8 +144,10 @@ EBuffer RTSPSession::Pick()
 
 RTSPRequest RTSPSession::AnalyseRequest(const EBuffer& buffer)
 {
-	EBuffer data = buffer;
+	TRACE("<%s>\r\n", (char*)buffer);
 	RTSPRequest request;
+	if (buffer.size() <= 0) return request;
+	EBuffer data = buffer;
 	EBuffer line = PickOneLine(data);
 	EBuffer method(32), url(1024), version(16), seq(64);
 	if (sscanf(line, "%s %s %s\r\n", (char*)method, (char*)url, (char*)version) != 3) {
@@ -189,6 +196,10 @@ RTSPReply RTSPSession::Reply(const RTSPRequest& request)
 	if (request.session().size() > 0) {
 		reply.SetSession(request.session());
 	}
+	else {
+		reply.SetSession(m_id);
+	}
+	reply.SetMethod(request.method());
 
 	switch (request.method())
 	{
@@ -199,7 +210,7 @@ RTSPReply RTSPSession::Reply(const RTSPRequest& request)
 	{
 		EBuffer sdp;
 		sdp << "v=0\r\n";
-		sdp << "o=- " << m_id << " 1 IN IP4 127.0.0.1\r\n";
+		sdp << "o=- " << (char*)m_id << " 1 IN IP4 127.0.0.1\r\n";
 		sdp << "t=0 0\r\n" << "a=control:*\r\n" << "m=video 0 RTP/AVP 96\r\n";
 		sdp << "a=rtpmap:96 H264/90000\r\n" << "a=control:track0\r\n";
 		reply.SetSdp(sdp);
@@ -208,6 +219,7 @@ RTSPReply RTSPSession::Reply(const RTSPRequest& request)
 	case 2: // SETUP
 		reply.SetClientPort(request.port(), request.port(1));
 		reply.SetServerPort("55000", "55001");
+		reply.SetSession(m_id);
 		break;
 	case 3: // PLAY
 	case 4: // TRARDOWN
@@ -247,21 +259,21 @@ RTSPRequest& RTSPRequest::operator=(const RTSPRequest& protocol)
 
 void RTSPRequest::SetMethod(const EBuffer& method)
 {
-	if (method == "OPTIONS") m_method = 0;
-	else if (method == "DESCRIBE") m_method = 1;
-	else if (method == "SETUP") m_method = 2;
-	else if (method == "PLAY") m_method = 3;
-	else if (method == "TEARDOWN") m_method = 4;
+	if (strcmp(method, "OPTIONS") == 0) m_method = 0;
+	else if (strcmp(method, "DESCRIBE")) m_method = 1;
+	else if (strcmp(method, "SETUP")) m_method = 2;
+	else if (strcmp(method, "PLAY")) m_method = 3;
+	else if (strcmp(method, "TEARDOWN")) m_method = 4;
 }
 
 void RTSPRequest::SetUrl(const EBuffer& url)
 {
-	m_url = url;
+	m_url = (char*)url;
 }
 
 void RTSPRequest::SetSequence(const EBuffer& seq)
 {
-	m_seq = seq;
+	m_seq = (char*)seq;
 }
 
 void RTSPRequest::SetClientPort(int ports[])
@@ -272,7 +284,7 @@ void RTSPRequest::SetClientPort(int ports[])
 
 void RTSPRequest::SetSession(const EBuffer& session)
 {
-	m_session = session;
+	m_session = (char*)session;
 }
 
 RTSPReply::RTSPReply()
@@ -322,37 +334,42 @@ EBuffer RTSPReply::toBuffer()
 		result << "Content-Base: 127.0.0.1\r\n";
 		result << "Content-type: application/sdp\r\n";
 		result << "Content-length: " << m_sdp.size() << "\r\n\r\n";
-		result << m_sdp;
+		result << (char*)m_sdp;
 		break;
 	case 2:
 		result << "Transport: RTP/AVP;unicast;client_port=" << m_client_port[0] << "-" << m_client_port[1];
 		result << " ;server_port=" << m_server_port[0] << "-" << m_server_port[1] << "\r\n";
-		result << "Session: " << m_session << "\r\n\r\n";
+		result << "Session: " << (char*)m_session << "\r\n\r\n";
 		break;
 	case 3:
 		result << "Range: npt=0.000-\r\n";
-		result << "Session: " << m_session << "\r\n\r\n";
+		result << "Session: " << (char*)m_session << "\r\n\r\n";
 		break;
 	case 4:
-		result << "Session: " << m_session << "\r\n\r\n";
+		result << "Session: " << (char*)m_session << "\r\n\r\n";
 		break;
 	}
 	return result;
 }
 
+void RTSPReply::SetMethod(int method)
+{
+	m_method = method;
+}
+
 void RTSPReply::SetOptions(const EBuffer& options)
 {
-	m_options = options;
+	m_options = (char*)options;
 }
 
 void RTSPReply::SetSequence(const EBuffer& seq)
 {
-	m_seq = seq;
+	m_seq = (char*)seq;
 }
 
 void RTSPReply::SetSdp(const EBuffer& sdp)
 {
-	m_sdp = sdp;
+	m_sdp = (char*)sdp;
 }
 
 void RTSPReply::SetClientPort(const EBuffer& port0, const EBuffer& port1)
@@ -370,4 +387,5 @@ void RTSPReply::SetServerPort(const EBuffer& port0, const EBuffer& port1)
 
 void RTSPReply::SetSession(const EBuffer& session)
 {
+	m_session = (char*)session;
 }

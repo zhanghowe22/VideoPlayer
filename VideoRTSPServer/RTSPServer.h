@@ -37,6 +37,7 @@ public:
 	RTSPReply& operator=(const RTSPReply& protocol);
 	~RTSPReply(){}
 	EBuffer toBuffer();
+	void SetMethod(int method);
 	void SetOptions(const EBuffer& options);
 	void SetSequence(const EBuffer& seq);
 	void SetSdp(const EBuffer& sdp);
@@ -46,8 +47,8 @@ public:
 
 private:
 	int m_method; // 0: OPTIONS 1: DESCRIBE 2:SETUP 3:PLAY 4:TEARDOWN
-	short m_client_port[2];
-	short m_server_port[2];
+	int m_client_port[2];
+	int m_server_port[2];
 	EBuffer m_sdp;
 	EBuffer m_options;
 	EBuffer m_session;
@@ -71,7 +72,7 @@ private:
 	RTSPReply Reply(const RTSPRequest& request);
 
 private:
-	std::string m_id;
+	EBuffer m_id;
 	ESocket m_client;
 };
 

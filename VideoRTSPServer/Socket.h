@@ -61,7 +61,7 @@ public:
 	}
 
 	EBuffer& operator<<(const char* str) {
-		*this += str;
+		*this += EBuffer(str);
 		return *this;
 	}
 
@@ -81,7 +81,6 @@ public:
 		data = (short)atoi(c_str());
 		return *this;
 	}
-
 };
 
 
@@ -224,7 +223,10 @@ public:
 
 	ESocket Accept(EAddress& addr) {
 		int len = addr.size();
-		SOCKET s = accept(*m_socket, addr, &len);
+		if (m_socket == nullptr) return ESocket(INVALID_SOCKET, true);
+		SOCKET server = *m_socket;
+		if (server == INVALID_SOCKET) return ESocket(INVALID_SOCKET, true);
+		SOCKET s = accept(server, addr, &len);
 		return ESocket(s, m_istcp);
 	}
 
@@ -240,6 +242,7 @@ public:
 
 	int Send(const EBuffer& buffer)
 	{
+		printf("send: %s\r\n", (char*)buffer);
 		int index = 0;
 		char* pData = buffer;
 		while (index < (int)buffer.size()) {
