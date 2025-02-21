@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MideaFile.cpp" />
+    <ClCompile Include="RTPHelper.cpp" />
     <ClCompile Include="RTSPServer.cpp" />
     <ClCompile Include="VideoRTSPServer.cpp" />
   </ItemGroup>
@@ -148,6 +149,7 @@
     <ClInclude Include="MideaFile.h" />
     <ClInclude Include="MyQueue.h" />
     <ClInclude Include="MyThread.h" />
+    <ClInclude Include="RTPHelper.h" />
     <ClInclude Include="RTSPServer.h" />
     <ClInclude Include="Socket.h" />
   </ItemGroup>

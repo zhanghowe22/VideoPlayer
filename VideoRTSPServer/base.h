@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+typedef unsigned char BYTE;
 
 class EBuffer : public std::string {
 public:
