@@ -1,7 +1,9 @@
 #pragma once
 #include "base.h"
+#include "Socket.h"
 
 /* 开发总结
+ * RTSP 负责控制媒体流，而 RTP 负责传输媒体数据，RTCP 负责监控传输质量。
  * 1. 一般较为复杂的数据类型，声明为类而非结构体，这样可以在构造函数中进行初始化，方便调用者使用
  * 2. 结构体和类的区别：默认结构体都是public属性和方法，默认类都是private属性和方法
  * 3. 位域的高位和低位的情况要进行分别： DataSheet中，默认左边是高位，右边是低位；位域中先声明的是低位，后声明的是高位，以字节为单位
@@ -24,19 +26,33 @@ public:
 	unsigned csrc[15];
 	
 public:
-	//RTPHeader();
-	//operator EBuffer();
+	RTPHeader();
+	operator EBuffer();
+	RTPHeader(const RTPHeader& header);
+	RTPHeader& operator=(const RTPHeader& header);
+};
+
+class RTPFrame {
+public:
+	RTPHeader m_head; // 头部
+	EBuffer m_pyload; // 数据负载
+	operator EBuffer();
+
 };
 
 class RTPHelper
 {
 public:
-	RTPHelper();
-	~RTPHelper();
+	RTPHelper() :timestamp(0), m_udp(false) {
+		m_udp.Bind(EAddress("0.0.0.0", (short)55000));
+	}
+	~RTPHelper() {}
+	int SendMediaFrame(RTPFrame& rtpframe, EBuffer& frame, const EAddress& client);
 
 private:
-	RTPHeader m_head; // 头部
-	EBuffer m_pyload; // 数据负载
-
+	int GetFrameSepSize(EBuffer& frame);
+	int SendFrame(const EBuffer& frame, const EAddress& client);
+	DWORD timestamp;
+	ESocket m_udp;
 };
 

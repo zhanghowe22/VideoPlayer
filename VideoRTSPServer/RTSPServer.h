@@ -4,6 +4,8 @@
 #include <string>
 #include <map>
 #include "MyQueue.h"
+#include "RTPHelper.h"
+#include "MideaFile.h"
 
 class RTSPRequest {
 public:
@@ -55,6 +57,10 @@ private:
 	EBuffer m_seq;
 };
 
+class RTSPSession;
+class RTSPServer;
+typedef void (*RTSPPLAYCB)(RTSPServer* thiz, RTSPSession& session);
+
 // 会话
 class RTSPSession {
 public:
@@ -63,17 +69,20 @@ public:
 	RTSPSession(const RTSPSession& session);
 	RTSPSession& operator=(const RTSPSession& session);
 	~RTSPSession() {}
-	int PickRequestAndReply();
+	int PickRequestAndReply(RTSPPLAYCB cb, RTSPServer* thiz);
+	EAddress GetClientUDPAddress() const;
 
 private:
 	EBuffer PickOneLine(EBuffer& buffer);
 	EBuffer Pick();
 	RTSPRequest AnalyseRequest(const EBuffer& buffer);
 	RTSPReply Reply(const RTSPRequest& request);
+	
 
 private:
 	EBuffer m_id;
 	ESocket m_client;
+	short m_port;
 };
 
 class RTSPServer : public ThreadFuncBase
@@ -82,6 +91,7 @@ public:
 	RTSPServer() : m_socket(true), m_status(0) ,m_pool(10)
 	{
 		m_threadMain.UpdateWorker(ThreadWorker(this, (FUNCTYPE)&RTSPServer::threadWorker));
+		m_h264.Open("./test.h264");
 	}
 
 	int Init(const std::string& strIP = "0.0.0.0", short port = 554);
@@ -96,6 +106,8 @@ protected:
 	// 返回0继续，返回负数终止，返回其他警告
 	int threadWorker();
 	int ThreadSession();
+	static void PlayCallBack(RTSPServer* thiz, RTSPSession& session);
+	void UdpWorker(const EAddress& client);
 
 private:
 	static SocketIniter m_initer;
@@ -105,5 +117,7 @@ private:
 	CMyThread m_threadMain;
 	MyThreadPool m_pool;
 	CMyQueue<RTSPSession> m_lstSession;
+	RTPHelper m_helper;
+	MideaFile m_h264;
 };
 

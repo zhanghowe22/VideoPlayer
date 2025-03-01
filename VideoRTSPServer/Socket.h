@@ -56,6 +56,13 @@ public:
 		m_addr.sin_family = AF_INET;
 	}
 
+	EAddress(const std::string& ip, short port) {
+		m_ip = ip;
+		m_port = port;
+		m_addr.sin_port = htons(port);
+		m_addr.sin_addr.s_addr = inet_addr(ip.c_str());
+	}
+
 	EAddress(const EAddress& addr) {
 		m_ip = addr.m_ip;
 		m_port = addr.m_port;
@@ -68,6 +75,12 @@ public:
 			m_port = addr.m_port;
 			memcpy(&m_addr, &addr.m_addr, sizeof(sockaddr_in));
 		}
+		return *this;
+	}
+
+	EAddress& operator=(short port) {
+		m_port = port;
+		m_addr.sin_port = htons(port);
 		return *this;
 	}
 
@@ -84,7 +97,7 @@ public:
 		return (sockaddr*)&m_addr;
 	}
 
-	operator sockaddr* ()  {
+	operator sockaddr* () {
 		return (sockaddr*)&m_addr;
 	}
 
@@ -128,7 +141,7 @@ public:
 		m_socket.reset();
 	}
 
-	operator SOCKET() {
+	operator SOCKET() const{
 		return *m_socket;
 	}
 
