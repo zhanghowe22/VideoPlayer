@@ -31,13 +31,14 @@ int RTPHelper::SendMediaFrame(RTPFrame& rtpframe, EBuffer& frame, const EAddress
 		}
 		if (restsize > 0) {
 			((BYTE*)rtpframe.m_pyload)[1] = 0x40 | ((BYTE*)rtpframe.m_pyload)[1]; // 0100 0000结束
+			memcpy(2 + (BYTE*)rtpframe.m_pyload, pFrame + RTP_MAX_SIZE * count, restsize);
 			SendFrame(rtpframe, client);
-			rtpframe.m_head.serial++;	
+			rtpframe.m_head.serial++;
 		}
 	}
 	else { // 小包发送
 		rtpframe.m_pyload.resize(frame.size() - sepsize);
-		memcpy(rtpframe.m_pyload, frame, frame.size() - sepsize);
+		memcpy(rtpframe.m_pyload, pFrame, frame.size() - sepsize);
 		SendFrame(rtpframe, client);
 		// 序号是累加的，时间戳一般是计算出来的，从0开始，每帧追加 时钟频率90000/每秒帧数24
 		rtpframe.m_head.serial++;	
@@ -59,7 +60,11 @@ int RTPHelper::GetFrameSepSize(EBuffer& frame)
 
 int RTPHelper::SendFrame(const EBuffer& frame, const EAddress& client)
 {
+	fwrite(frame, 1, frame.size(), m_file);
+	fwrite("00000000", 1, 8, m_file);
+	fflush(m_file);
 	int ret = sendto(m_udp, frame, frame.size(), 0, client, client.size());
+	printf("ret %d size %d ip %s port %d\r\n", ret, frame.size(), client.Ip(), client.Port());
 	return ret;
 }
 
@@ -83,7 +88,7 @@ RTPHeader::operator EBuffer()
 	header.serial = htons(header.serial);
 	header.timestamp = htonl(header.timestamp);
 	header.ssrc = htonl(header.ssrc);
-	int size = 14 + 4 * csrccount;
+	int size = 12 + 4 * csrccount;
 	EBuffer result(size);
 	memcpy(result, &header, size);
 	return result;

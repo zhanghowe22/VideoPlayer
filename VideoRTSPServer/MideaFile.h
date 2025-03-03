@@ -20,7 +20,7 @@ public:
 
 private:
 	// 返回-1表明查找失败
-	long FindH264Head();
+	long FindH264Head(int& headsize);
 	EBuffer ReadH264Frame();
 
 private:

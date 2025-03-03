@@ -70,6 +70,7 @@ void RTSPServer::UdpWorker(const EAddress& client)
 
 RTSPSession::RTSPSession()
 {
+	m_port = -1;
 	// 生成唯一的session id
 	UUID uuid;
 	UuidCreate(&uuid);
@@ -85,12 +86,14 @@ RTSPSession::RTSPSession(const ESocket& client)
 	UuidCreate(&uuid);
 	m_id.resize(8);
 	snprintf((char*)m_id.c_str(), m_id.size(), "%u%u", uuid.Data1, uuid.Data2);
+	m_port = -1;
 }
 
 RTSPSession::RTSPSession(const RTSPSession& session)
 {
 	m_id = session.m_id;
 	m_client = session.m_client;
+	m_port = session.m_port;
 }
 
 RTSPSession& RTSPSession::operator=(const RTSPSession& session)
@@ -116,8 +119,10 @@ int RTSPSession::PickRequestAndReply(RTSPPLAYCB cb, RTSPServer* thiz)
 		}
 		RTSPReply rep = Reply(req);
 		ret = m_client.Send(rep.toBuffer());
-		if (req.method() == 3) {
+		if (req.method() == 2) {
 			m_port = (short)atoi(req.port());
+		}
+		if (req.method() == 3) {
 			cb(thiz, *this);
 		}
 	} while (ret >= 0);
@@ -130,6 +135,7 @@ EAddress RTSPSession::GetClientUDPAddress() const
 	EAddress addr;
 	int len = addr.size();
 	getsockname(m_client, addr, &len);
+	addr.Fresh();
 	addr = m_port;
 	return addr;
 }
@@ -179,7 +185,7 @@ RTSPRequest RTSPSession::AnalyseRequest(const EBuffer& buffer)
 	EBuffer data = buffer;
 	EBuffer line = PickOneLine(data);
 	EBuffer method(32), url(1024), version(16), seq(64);
-	if (sscanf(line, "%s %s %s\r\n", (char*)method, (char*)url, (char*)version) != 3) {
+	if (sscanf(line, "%s %s %s\r\n", (char*)method, (char*)url, (char*)version) < 3) {
 		TRACE("Error at: [%s]\r\n", (char*)line);
 		return request;
 	}
@@ -199,7 +205,13 @@ RTSPRequest RTSPSession::AnalyseRequest(const EBuffer& buffer)
 	}
 
 	else if (strcmp(method, "SETUP") == 0) {
-		line = PickOneLine(data);
+		do 
+		{
+			line = PickOneLine(data);
+			if (strstr((const char*)line, "client_port=") == NULL) continue;
+			break;
+		} while (line.size() > 0);
+
 		int port[2]{ 0,0 };
 		if (sscanf(line, "Transport: RTP/AVP;unicast;client_port=%d-%d\r\n", port, port + 1) == 2) {
 			request.SetClientPort(port);

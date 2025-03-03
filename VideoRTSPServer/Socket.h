@@ -79,7 +79,7 @@ public:
 	}
 
 	EAddress& operator=(short port) {
-		m_port = port;
+		m_port = (unsigned short)port;
 		m_addr.sin_port = htons(port);
 		return *this;
 	}
@@ -107,9 +107,21 @@ public:
 
 	int size() const { return sizeof(sockaddr_in); }
 
+	const std::string Ip() const {
+		return m_ip;
+	}
+
+	unsigned short Port() const {
+		return m_port;
+	}
+
+	void Fresh() {
+		m_ip = inet_ntoa(m_addr.sin_addr);
+	}
+
 private:
 	std::string m_ip;
-	short m_port;
+	unsigned short m_port;
 	sockaddr_in m_addr;
 };
 

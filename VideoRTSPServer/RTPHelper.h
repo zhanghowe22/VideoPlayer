@@ -37,7 +37,6 @@ public:
 	RTPHeader m_head; // 头部
 	EBuffer m_pyload; // 数据负载
 	operator EBuffer();
-
 };
 
 class RTPHelper
@@ -45,8 +44,11 @@ class RTPHelper
 public:
 	RTPHelper() :timestamp(0), m_udp(false) {
 		m_udp.Bind(EAddress("0.0.0.0", (short)55000));
+		m_file = fopen("./out.bin", "wb+");
 	}
-	~RTPHelper() {}
+	~RTPHelper() {
+		fclose(m_file);
+	}
 	int SendMediaFrame(RTPFrame& rtpframe, EBuffer& frame, const EAddress& client);
 
 private:
@@ -54,5 +56,6 @@ private:
 	int SendFrame(const EBuffer& frame, const EAddress& client);
 	DWORD timestamp;
 	ESocket m_udp;
+	FILE* m_file;
 };
 
