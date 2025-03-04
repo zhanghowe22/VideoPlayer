@@ -74,7 +74,8 @@ BOOL CVideoClientDlg::OnInitDialog()
 
 	m_controller->SetWnd(m_video.GetSafeHwnd());
 
-	m_url.SetWindowText(_T("file:///D:\\1_zhangjiahao\\Code\\VideoPlay\\VideoClient\\股市讨论.mp4"));
+	// m_url.SetWindowText(_T("file:///D:\\1_zhangjiahao\\Code\\VideoPlay\\VideoClient\\股市讨论.mp4"));
+	m_url.SetWindowText(_T("rtsp://127.0.0.1:554"));
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
