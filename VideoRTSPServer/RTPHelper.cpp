@@ -14,24 +14,27 @@ int RTPHelper::SendMediaFrame(RTPFrame& rtpframe, EBuffer& frame, const EAddress
 		size_t restsize = frame_size % RTP_MAX_SIZE;
 		size_t count = frame_size / RTP_MAX_SIZE;
 		for (size_t i = 0; i < count; i++) {
-			rtpframe.m_pyload.resize(RTP_MAX_SIZE);
+			rtpframe.m_pyload.resize(RTP_MAX_SIZE + 2);
 			((BYTE*)rtpframe.m_pyload)[0] = 0x60 | 28; // 0110 0000  | 0001 1100
 
 			((BYTE*)rtpframe.m_pyload)[1] = nalu; // 0000 0000中间
 
 			if (i == 0) {
-				((BYTE*)rtpframe.m_pyload)[1] = 0x80 | ((BYTE*)rtpframe.m_pyload)[1]; // 1000 0000开始
+				((BYTE*)rtpframe.m_pyload)[1] |= 0x80; // 1000 0000开始
 			}
 			else if ((restsize == 0) && (i == count - 1)) {
-				((BYTE*)rtpframe.m_pyload)[1] = 0x40 | ((BYTE*)rtpframe.m_pyload)[1]; // 0100 0000结束
+				((BYTE*)rtpframe.m_pyload)[1] |= 0x40; // 0100 0000结束
 			}
-			memcpy(2 + (BYTE*)rtpframe.m_pyload, pFrame + RTP_MAX_SIZE * i, RTP_MAX_SIZE);
+			memcpy(2 + (BYTE*)rtpframe.m_pyload, pFrame + RTP_MAX_SIZE * i + 1, RTP_MAX_SIZE); // 加一表示跳过第一个字节
 			SendFrame(rtpframe, client);
 			rtpframe.m_head.serial++;
 		}
 		if (restsize > 0) {
+			rtpframe.m_pyload.resize(restsize + 2);
+			((BYTE*)rtpframe.m_pyload)[0] = 0x60 | 28; // 0110 0000  | 0001 1100
+			((BYTE*)rtpframe.m_pyload)[1] = nalu; // 0000 0000中间
 			((BYTE*)rtpframe.m_pyload)[1] = 0x40 | ((BYTE*)rtpframe.m_pyload)[1]; // 0100 0000结束
-			memcpy(2 + (BYTE*)rtpframe.m_pyload, pFrame + RTP_MAX_SIZE * count, restsize);
+			memcpy(2 + (BYTE*)rtpframe.m_pyload, pFrame + RTP_MAX_SIZE * count + 1, restsize);
 			SendFrame(rtpframe, client);
 			rtpframe.m_head.serial++;
 		}
