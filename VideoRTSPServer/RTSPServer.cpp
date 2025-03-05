@@ -38,7 +38,10 @@ int RTSPServer::threadWorker()
 	if (client != INVALID_SOCKET) {
 		RTSPSession session(client);
 		m_lstSession.PushBack(session);
-		m_pool.DispatchWorker(ThreadWorker(this, (FUNCTYPE)&RTSPServer::ThreadSession));
+		int index = m_pool.DispatchWorker(ThreadWorker(this, (FUNCTYPE)&RTSPServer::ThreadSession));
+		if (index == -1) {
+			TRACE("Failed to dispatch worker: no idle threads available.\r\n");
+		}
 	}
 	return 0;
 }
@@ -48,6 +51,9 @@ int RTSPServer::ThreadSession()
 	RTSPSession session;
 	if (m_lstSession.PopFront(session)) {
 		int ret = session.PickRequestAndReply(RTSPServer::PlayCallBack, this);
+		if (ret < 0) {
+			TRACE("PickRequestAndReply failed with code: %d\r\n", ret);
+		}
 		return ret;
 	}
 	return -1;
@@ -111,7 +117,11 @@ int RTSPSession::PickRequestAndReply(RTSPPLAYCB cb, RTSPServer* thiz)
 	int ret = -1;
 	do {
 		EBuffer buffer = Pick();
-		if (buffer.size() <= 0) return -1;
+		if (buffer.size() <= 0) {
+			TRACE("buffer size <= 0\r\n");
+			return -1;
+		}
+			
 		RTSPRequest req = AnalyseRequest(buffer);
 		if (req.method() < 0) {
 			TRACE("buffer[%s]\r\n", (char*)buffer);
@@ -166,13 +176,31 @@ EBuffer RTSPSession::Pick()
 		ret = m_client.Recv(buf);
 		if (ret > 0) {
 			result += buf;
+			
 			if (result.size() >= 4) {
 				UINT val = *(UINT*)(result.size() - 4 + (char*)result);
 				if (val == *(UINT*)"\r\n\r\n") {
+					TRACE("Received data: [%s]\r\n", (char*)result);
+					TRACE("RTSP request end detected.\r\n");
 					break;
 				}
 			}
 		}
+		else if (ret == 0) {
+			TRACE("Client closed the connection gracefully.\r\n");
+			break;
+		}
+		else {
+			int error = WSAGetLastError();
+			TRACE("Failed to receive data from client. Error: %d\r\n", error);
+			if (error == 10054) {
+				TRACE("Connection reset by client.\r\n");
+			}
+			break;
+		}
+	}
+	if (result.size() <= 0) {
+		TRACE("No data received from client.\r\n");
 	}
 	return result;
 }
@@ -256,6 +284,7 @@ RTSPReply RTSPSession::Reply(const RTSPRequest& request)
 		sdp << "a=framerate:24\r\n";
 		sdp << "a=rtpmap:96 H264/90000\r\n" << "a=control:track0\r\n";
 		reply.SetSdp(sdp);
+
 	}
 	break;
 	case 2: // SETUP
@@ -302,10 +331,10 @@ RTSPRequest& RTSPRequest::operator=(const RTSPRequest& protocol)
 void RTSPRequest::SetMethod(const EBuffer& method)
 {
 	if (strcmp(method, "OPTIONS") == 0) m_method = 0;
-	else if (strcmp(method, "DESCRIBE")) m_method = 1;
-	else if (strcmp(method, "SETUP")) m_method = 2;
-	else if (strcmp(method, "PLAY")) m_method = 3;
-	else if (strcmp(method, "TEARDOWN")) m_method = 4;
+	else if (strcmp(method, "DESCRIBE") == 0) m_method = 1;
+	else if (strcmp(method, "SETUP") == 0) m_method = 2;
+	else if (strcmp(method, "PLAY") == 0) m_method = 3;
+	else if (strcmp(method, "TEARDOWN") == 0) m_method = 4;
 }
 
 void RTSPRequest::SetUrl(const EBuffer& url)

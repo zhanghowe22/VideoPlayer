@@ -105,7 +105,7 @@ public:
 	}
 
 	void UpdateWorker(const ::ThreadWorker& worker = ::ThreadWorker()) {
-		if (m_worker.load() != NULL && (m_worker.load() != &worker)) {
+		if ((m_worker.load() != NULL) && (m_worker.load() != &worker)) {
 			::ThreadWorker* pWorker = m_worker.load();
 			m_worker.store(NULL);
 			delete pWorker;
@@ -176,8 +176,10 @@ public:
 	~MyThreadPool() {
 		Stop();
 		for (size_t i = 0; i < m_threads.size(); i++) {
-			delete m_threads[i];
-			m_threads[i] = NULL;
+			if (m_threads[i]) {
+				delete m_threads[i];
+				m_threads[i] = NULL;
+			}
 		}
 		m_threads.clear();
 	}

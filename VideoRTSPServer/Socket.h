@@ -185,6 +185,15 @@ public:
 	int Recv(EBuffer& buffer)
 	{
 		int ret = recv(*m_socket, buffer, buffer.size(), 0);
+		if (ret > 0) {
+			printf("Received %d bytes from client.\r\n", ret);
+		}
+		else if (ret == 0) {
+			printf("Client closed the connection.\r\n");
+		}
+		else {
+			printf("Failed to receive data from client. Error: %d\r\n", WSAGetLastError());
+		}
 		return ret;
 	}
 
