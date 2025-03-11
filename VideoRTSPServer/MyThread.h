@@ -67,6 +67,7 @@ private:
 	FUNCTYPE func;
 };
 
+// 线程管理类
 class CMyThread
 {
 public:
@@ -81,7 +82,7 @@ public:
 	// true: 成功； false: 失败
 	bool Start() {
 		m_bStatus = true;
-		m_hThread = (HANDLE)_beginthread(&CMyThread::ThreadEntry, 0, this);
+		m_hThread = (HANDLE)_beginthread(&CMyThread::ThreadEntry, 0, this); // ?
 		if (!IsVaild()) {
 			m_bStatus = false;
 		}
@@ -105,6 +106,7 @@ public:
 	}
 
 	void UpdateWorker(const ::ThreadWorker& worker = ::ThreadWorker()) {
+		// 检查当前是否有工作单元，如果有继续检查是否需要清理；检查当前的的工作单元与新的工作单元是否地址相同，如果不同，说明需要清理旧的
 		if ((m_worker.load() != NULL) && (m_worker.load() != &worker)) {
 			::ThreadWorker* pWorker = m_worker.load();
 			m_worker.store(NULL);
@@ -117,7 +119,7 @@ public:
 			m_worker.store(NULL);
 			return;
 		}
-
+		// 使用拷贝构造创建一个新的ThreadWorker对象，内容于传入的worker相同
 		m_worker.store(new ::ThreadWorker(worker));
 	}
 
@@ -137,6 +139,7 @@ private:
 	}
 
 	void ThreadWorker() {
+		// 不断检查是否有工作单元需要执行，并根据工作单元的执行结果决定是否继续运行或清理资源。
 		while (m_bStatus) {
 			if (m_worker.load() == NULL) {
 				Sleep(1);
@@ -144,7 +147,7 @@ private:
 			}
 			::ThreadWorker worker = *m_worker.load();
 			if (worker.IsValid()) {
-				if (WaitForSingleObject(m_hThread, 0) == WAIT_TIMEOUT) {
+				if (WaitForSingleObject(m_hThread, 0) == WAIT_TIMEOUT) { // WaitForSingleObject用来等待m_hThread的状态
 					int ret = worker();
 					if (ret != 0) {
 						TRACE("Thread found warning code %d\r\n", ret);
@@ -184,6 +187,7 @@ public:
 		m_threads.clear();
 	}
 
+	// 创建大小为size的线程池
 	MyThreadPool(size_t size) {
 		m_threads.resize(size);
 		for (size_t i = 0; i < size; i++) {
@@ -191,6 +195,7 @@ public:
 		}
 	}
 
+	// 启动线程池内的线程
 	bool Invoke() {
 		bool ret = true;
 		for (size_t i = 0; i < m_threads.size(); i++) {
@@ -214,6 +219,7 @@ public:
 		}
 	}
 
+	// 将任务（ThreadWorker 对象）分配给空闲的线程
 	// 返回-1 表示分配失败，所有线程都在忙；大宇等于0，表示第n个线程分配来做这个事情
 	int DispatchWorker(const ThreadWorker& worker) {
 		int index = -1;
@@ -229,6 +235,7 @@ public:
 		return index;
 	}
 
+	// 检查指定索引的线程是否有效
 	bool CheckThreadValid(size_t index) {
 		if (index < m_threads.size())
 		{

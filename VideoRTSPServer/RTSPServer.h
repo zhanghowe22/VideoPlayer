@@ -77,7 +77,6 @@ private:
 	EBuffer Pick();
 	RTSPRequest AnalyseRequest(const EBuffer& buffer);
 	RTSPReply Reply(const RTSPRequest& request);
-	
 
 private:
 	EBuffer m_id;

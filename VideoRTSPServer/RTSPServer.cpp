@@ -282,6 +282,7 @@ RTSPReply RTSPSession::Reply(const RTSPRequest& request)
 		sdp << "o=- " << (char*)m_id << " 1 IN IP4 127.0.0.1\r\n";
 		sdp << "t=0 0\r\n" << "a=control:*\r\n" << "m=video 0 RTP/AVP 96\r\n";
 		sdp << "a=framerate:24\r\n";
+		sdp << "a=range:npt=0-60\r\n"; // TODO: 视频长度目前获取不正确
 		sdp << "a=rtpmap:96 H264/90000\r\n" << "a=control:track0\r\n";
 		reply.SetSdp(sdp);
 
